@@ -1,0 +1,486 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>白色信封 - 信纸动画</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background-color: #f5f5f5; /* 浅灰色背景 */
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #555;
+            margin-bottom: 30px;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+        
+        .instructions {
+            color: #777;
+            margin-bottom: 40px;
+            font-size: 14px;
+        }
+        
+        .envelope-container {
+            position: relative;
+            width: 300px;
+            height: 200px;
+            margin: 0 auto 40px;
+            cursor: pointer;
+            perspective: 1000px;
+        }
+        
+        .envelope {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+        
+        .envelope.open {
+            transform: translateY(-50px) rotateX(180deg);
+        }
+        
+        .envelope-front, .envelope-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            background-color: #ffffff;
+            overflow: hidden;
+        }
+        
+        .envelope-back {
+            transform: rotateX(180deg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .envelope-flap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 150px solid transparent;
+            border-right: 150px solid transparent;
+            border-top: 100px solid #f8f8f8;
+            border-radius: 8px 8px 0 0;
+            z-index: 2;
+        }
+        
+        .envelope-body {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background-color: #ffffff;
+            border-radius: 0 0 8px 8px;
+        }
+        
+        .envelope-seal {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 60px;
+            background-color: #f8f8f8;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #bbb;
+            font-size: 24px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            z-index: 3;
+            transition: all 0.5s ease;
+        }
+        
+        .envelope.open .envelope-seal {
+            transform: translateX(-50%) translateY(-20px) scale(0.8);
+            opacity: 0.5;
+        }
+        
+        .letter-container {
+            position: relative;
+            width: 90%;
+            max-width: 700px;
+            margin: 0 auto;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s ease 0.3s;
+            max-height: 0;
+            overflow: hidden;
+        }
+        
+        .letter-container.show {
+            opacity: 1;
+            transform: translateY(0);
+            max-height: 1000px;
+        }
+        
+        .letter {
+            background-color: #fffef5;
+            border-radius: 4px;
+            padding: 40px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+            text-align: left;
+            position: relative;
+            border-left: 4px solid #e6e6e6;
+        }
+        
+        .letter-content {
+            height: 400px;
+            overflow-y: auto;
+            padding-right: 15px;
+        }
+        
+        /* 自定义滚动条样式 */
+        .letter-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .letter-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        
+        .letter-content::-webkit-scrollbar-thumb {
+            background: #d0d0d0;
+            border-radius: 3px;
+        }
+        
+        .letter-content::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        .letter-line {
+            position: absolute;
+            left: 50px;
+            right: 50px;
+            height: 1px;
+            background-color: #f0f0f0;
+        }
+        
+        .letter-line.top {
+            top: 80px;
+        }
+        
+        .letter-line.bottom {
+            bottom: 80px;
+        }
+        
+        .letter-text {
+            font-size: 16px;
+            color: #444;
+            margin-bottom: 20px;
+            text-indent: 2em;
+        }
+        
+        .letter-text:last-child {
+            margin-bottom: 0;
+        }
+        
+        .signature {
+            text-align: right;
+            margin-top: 30px;
+            font-style: italic;
+            color: #666;
+        }
+        
+        .footer-note {
+            color: #888;
+            font-size: 13px;
+            margin-top: 30px;
+        }
+        
+        .close-hint {
+            color: #999;
+            font-size: 14px;
+            margin-top: 20px;
+            opacity: 0;
+            transition: opacity 0.5s ease 1s;
+        }
+        
+        .close-hint.show {
+            opacity: 1;
+        }
+        
+        .close-hint i {
+            margin-right: 8px;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .envelope-container {
+                width: 250px;
+                height: 166px;
+            }
+            
+            .envelope-flap {
+                border-left: 125px solid transparent;
+                border-right: 125px solid transparent;
+                border-top: 83px solid #f8f8f8;
+            }
+            
+            .letter {
+                padding: 30px 25px;
+            }
+            
+            .letter-content {
+                height: 350px;
+            }
+            
+            .letter-line {
+                left: 30px;
+                right: 30px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .letter {
+                padding: 25px 20px;
+            }
+            
+            .letter-content {
+                height: 300px;
+            }
+            
+            .letter-text {
+                font-size: 15px;
+            }
+        }
+        
+        /* 动画效果 */
+        @keyframes pulse {
+            0% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.05); }
+            100% { transform: translateX(-50%) scale(1); }
+        }
+        
+        .envelope-seal {
+            animation: pulse 2s infinite ease-in-out;
+        }
+        
+        .envelope.open .envelope-seal {
+            animation: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-envelope"></i> 白色信封</h1>
+        <p class="instructions">点击信封打开，点击信纸以外区域关闭</p>
+        
+        <div class="envelope-container">
+            <div class="envelope" id="envelope">
+                <div class="envelope-front">
+                    <div class="envelope-flap"></div>
+                    <div class="envelope-body"></div>
+                    <div class="envelope-seal">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                </div>
+                <div class="envelope-back"></div>
+            </div>
+        </div>
+        
+        <div class="letter-container" id="letterContainer">
+            <div class="letter">
+                <div class="letter-line top"></div>
+                <div class="letter-content" id="letterContent">
+                    <p class="letter-text">我还是无法平静。</p>
+                    
+                    <p class="letter-text">我总在想象一种更加轻盈的爱法。不必念诵你我的爱恨，也不必回想痛苦的过去。某段时间，我总想着，如果我们没有那些难以启齿的过往，是否会让这份爱的密度更上一层？可我们就是由这些复杂的、令人不愿回想的小东西组成的。它们湿哒哒的，捧在手里又沉甸甸的。水露顺着手臂流进袖口，凉意使人如梦初醒。这份潮湿竟是独属于你我的联系。它们不是负担，却始终不能忽略。</p>
+                    
+                    <p class="letter-text">我总是在剖析着，试图让自己看起来理性一点。像是小孩总学大人讲话。这倒是让我觉得羞愧了。我居然试图抛开过往一切，去谈论我们。这不是故意的。我越是狡辩，就越显得残忍。怎么能把空泛的理论，与真实的情感混为一谈呢？</p>
+                    
+                    <p class="letter-text">我又试图在你面前装老成了。但心脏背叛了我。它不在乎教条，也不在乎体面。这个可恨的小叛徒，向着你的方向偏航。</p>
+                    
+                    <p class="letter-text">我还是无法平静。</p>
+                    
+                    <p class="letter-text">每次想给你写点什么，就会情绪激动地吐出一大堆情绪造就的垃圾。每每到此时，我便会愕然：难以置信。时至今日，这颗心仍然会为你所动摇。你是用红线缠住我的拇指了吗，让它溜进桡动脉，又紧紧绑住我的心脏。轻轻一拉动，它就随你牵着走了。神经末梢麻酥酥的感觉，这就是所说的爱吗。</p>
+                    
+                    <p class="letter-text">其实我是分不清亢奋和幸福的。它们都是突然出现，让我的心扑通扑通跳，口干舌燥，又忍不住手舞足蹈。最相似的一点，它们都会让我变成流口水的傻瓜。大概这一整年我都是流口水的傻瓜。我的意思是，和你在一起我很幸福。我不常提及恨了。现在想起你，我总是嘴角带着傻气的笑。我不那么痛苦了。这可能是你给我的恩慈吧。</p>
+                    
+                    <p class="letter-text">我不再辩证这是不是幸福了。我只是承认，我笑得太多。</p>
+                    
+                    <p class="letter-text">——————</p>
+                    
+                    <p class="letter-text">开头我说想要抛开一切过往的纯粹羁绊，其实是太过理想化的想法。就像是我写过的，「倘若在世界诞生之初只有你和我都尚未命名禁忌的果实也尚未结出我们便不会分食那沉甸甸的原罪栖居于那片未被玷污的乐园之下从而避开所有关于离别与牺牲的预言那么就可以获得幸福了吧」文段中过于美化的情感超越伦理权威的联系，是我始终渴望的。可转念一想，正是过去的痛苦与幸福，诞生了你和我之间的复杂感情。这些是无法抛开的，也正是连接你和我的红线。这反而是空洞的故事所无法比拟的。属于你我的，独一无二的红线。</p>
+                    
+                    <div class="signature">
+                        <p>—— 一封未寄出的信</p>
+                    </div>
+                </div>
+                <div class="letter-line bottom"></div>
+            </div>
+        </div>
+        
+        <p class="close-hint" id="closeHint"><i class="fas fa-mouse-pointer"></i> 点击信纸以外区域关闭信封</p>
+        
+        <p class="footer-note">* 使用鼠标滚轮或触摸滑动阅读信纸内容</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const envelope = document.getElementById('envelope');
+            const letterContainer = document.getElementById('letterContainer');
+            const closeHint = document.getElementById('closeHint');
+            const letterContent = document.getElementById('letterContent');
+            
+            let isOpen = false;
+            
+            // 点击信封打开
+            envelope.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (!isOpen) {
+                    openEnvelope();
+                }
+            });
+            
+            // 点击空白处（信纸以外区域）关闭
+            document.addEventListener('click', function(e) {
+                // 如果信封已打开，且点击的不是信纸区域
+                if (isOpen && !letterContainer.contains(e.target) && !envelope.contains(e.target)) {
+                    closeEnvelope();
+                }
+            });
+            
+            // 阻止点击信纸时触发关闭
+            letterContainer.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+            
+            function openEnvelope() {
+                isOpen = true;
+                
+                // 添加信封打开动画类
+                envelope.classList.add('open');
+                
+                // 显示信纸
+                setTimeout(() => {
+                    letterContainer.classList.add('show');
+                }, 500);
+                
+                // 显示关闭提示
+                setTimeout(() => {
+                    closeHint.classList.add('show');
+                }, 1500);
+            }
+            
+            function closeEnvelope() {
+                isOpen = false;
+                
+                // 隐藏信纸
+                letterContainer.classList.remove('show');
+                closeHint.classList.remove('show');
+                
+                // 关闭信封动画
+                setTimeout(() => {
+                    envelope.classList.remove('open');
+                }, 300);
+            }
+            
+            // 添加键盘支持：ESC键关闭信封
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && isOpen) {
+                    closeEnvelope();
+                }
+            });
+            
+            // 添加信纸滚动提示
+            let scrollTimeout;
+            letterContent.addEventListener('scroll', function() {
+                // 如果用户滚动到接近底部，自动隐藏关闭提示
+                const scrollBottom = this.scrollHeight - this.scrollTop - this.clientHeight;
+                if (scrollBottom < 50) {
+                    closeHint.classList.remove('show');
+                } else {
+                    closeHint.classList.add('show');
+                }
+                
+                // 设置定时器，3秒后重新显示提示
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(() => {
+                    if (scrollBottom >= 50) {
+                        closeHint.classList.add('show');
+                    }
+                }, 3000);
+            });
+            
+            // 初始显示提示（3秒后消失）
+            setTimeout(() => {
+                if (!isOpen) {
+                    const initialHint = document.createElement('div');
+                    initialHint.innerHTML = '<i class="fas fa-hand-point-up"></i> 点击信封打开';
+                    initialHint.style.cssText = `
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        background: rgba(255, 255, 255, 0.9);
+                        padding: 10px 20px;
+                        border-radius: 20px;
+                        font-size: 14px;
+                        color: #666;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                        z-index: 10;
+                        pointer-events: none;
+                        animation: fadeOut 2s forwards 3s;
+                    `;
+                    
+                    // 添加淡出动画
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        @keyframes fadeOut {
+                            from { opacity: 1; }
+                            to { opacity: 0; }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                    
+                    envelope.parentElement.style.position = 'relative';
+                    envelope.parentElement.appendChild(initialHint);
+                    
+                    setTimeout(() => {
+                        if (initialHint.parentElement) {
+                            initialHint.parentElement.removeChild(initialHint);
+                        }
+                    }, 5000);
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
